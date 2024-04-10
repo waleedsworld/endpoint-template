@@ -22,3 +22,4 @@ htmlcov/
 
 # Local env
 .env
+.agent-tmp/
