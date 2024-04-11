@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>endpoint-template · Flask API starter</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}" />
+</head>
+<body>
+  <main class="wrap">
+    <header class="hero">
+      <span class="badge">v{{ version }}</span>
+      <h1>endpoint&#8209;template</h1>
+      <p class="tagline">A tiny, batteries&#8209;included Flask starter. Drop your routes in and go.</p>
+    </header>
+
+    <section class="card">
+      <h2>Available endpoints</h2>
+      <ul class="endpoints">
+        {% for e in endpoints %}
+        <li>
+          <span class="method method--{{ e.method|lower }}">{{ e.method }}</span>
+          <code class="path">{{ e.path }}</code>
+          <span class="desc">{{ e.desc }}</span>
+        </li>
+        {% endfor %}
+      </ul>
+    </section>
+
+    <section class="card try">
+      <h2>Try it</h2>
+      <p>Everything speaks JSON. From your terminal:</p>
+      <pre><code>curl http://127.0.0.1:5000/api/health
+
+curl -X POST http://127.0.0.1:5000/api/echo \
+  -H "Content-Type: application/json" \
+  -d '{"hello": "world"}'</code></pre>
+    </section>
+
+    <footer class="foot">
+      <p>Built with Flask · Made to be forked</p>
+    </footer>
+  </main>
+</body>
+</html>
