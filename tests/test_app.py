@@ -1,17 +1,7 @@
-"""Tests for the endpoint-template Flask app."""
+"""Smoke tests for the endpoint-template Flask app.
 
-import json
-
-import pytest
-
-from app import create_app
-
-
-@pytest.fixture()
-def client():
-    app = create_app({"TESTING": True})
-    with app.test_client() as c:
-        yield c
+The ``client`` fixture is provided by ``tests/conftest.py``.
+"""
 
 
 def test_index_renders(client):
