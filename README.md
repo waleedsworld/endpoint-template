@@ -81,11 +81,14 @@ Save, and Flask's reloader picks it up instantly. Then add a matching test in `t
 ## Running the tests
 
 ```bash
-pip install pytest
+pip install -r requirements-dev.txt
 pytest
 ```
 
-Seven tests cover the landing page, every endpoint, JSON validation, and the error handlers.
+The suite covers the landing page, every endpoint, JSON validation and error
+shapes, the 404/405 handlers, and the application factory's configuration
+wiring. Fixtures live in `tests/conftest.py` so each test gets a fresh,
+isolated app instance.
 
 ## Deploying
 
@@ -108,12 +111,18 @@ Live demo — deploying soon.
 endpoint-template/
 ├── app.py                 # the whole app: factory, routes, error handlers
 ├── requirements.txt       # just Flask
+├── requirements-dev.txt   # + pytest for the test suite
+├── pytest.ini             # pytest configuration
 ├── templates/
 │   └── index.html         # the landing page
 ├── static/
 │   └── style.css          # its styling
 ├── tests/
-│   └── test_app.py        # pytest suite
+│   ├── conftest.py        # shared app / client fixtures
+│   ├── test_app.py        # landing page + endpoint smoke tests
+│   ├── test_api.py        # JSON API behaviour
+│   ├── test_errors.py     # 404 / 405 handlers
+│   └── test_factory.py    # create_app config wiring
 └── docs/media/            # screenshots
 ```
 
