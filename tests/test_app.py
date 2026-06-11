@@ -37,6 +37,47 @@ def test_time(client):
     assert "iso" in body
 
 
+def test_uuid_default_single(client):
+    resp = client.get("/api/uuid")
+    assert resp.status_code == 200
+    body = resp.get_json()
+    assert body["count"] == 1
+    assert body["version"] == 4
+    assert len(body["uuids"]) == 1
+
+
+def test_uuid_batch(client):
+    resp = client.get("/api/uuid?count=5")
+    assert resp.status_code == 200
+    body = resp.get_json()
+    assert body["count"] == 5
+    assert len(body["uuids"]) == 5
+    assert len(set(body["uuids"])) == 5  # all distinct
+
+
+def test_uuid_rejects_out_of_range(client):
+    assert client.get("/api/uuid?count=0").status_code == 400
+    assert client.get("/api/uuid?count=101").status_code == 400
+
+
+def test_uuid_rejects_non_integer(client):
+    resp = client.get("/api/uuid?count=abc")
+    assert resp.status_code == 400
+    assert "error" in resp.get_json()
+
+
+def test_request_id_generated(client):
+    resp = client.get("/api/health")
+    rid = resp.headers.get("X-Request-ID")
+    assert rid
+    assert len(rid) >= 8
+
+
+def test_request_id_honoured_from_caller(client):
+    resp = client.get("/api/health", headers={"X-Request-ID": "trace-123"})
+    assert resp.headers.get("X-Request-ID") == "trace-123"
+
+
 def test_echo_roundtrip(client):
     resp = client.post("/api/echo", json={"hello": "world"})
     assert resp.status_code == 200

@@ -13,12 +13,16 @@ from __future__ import annotations
 
 import os
 import platform
+import uuid
 from datetime import datetime, timezone
 
-from flask import Flask, jsonify, render_template, request
+from flask import Flask, g, jsonify, render_template, request
 
 # App version. Bump this when you cut a release.
-__version__ = "1.1.0"
+__version__ = "1.2.0"
+
+# Header used to carry a request-correlation id in and out of the app.
+REQUEST_ID_HEADER = "X-Request-ID"
 
 # Remember when the process booted so /api/health can report uptime.
 STARTED_AT = datetime.now(timezone.utc)
@@ -38,9 +42,33 @@ def create_app(config: dict | None = None) -> Flask:
     if config:
         app.config.update(config)
 
+    register_request_id(app)
     register_routes(app)
     register_error_handlers(app)
     return app
+
+
+def register_request_id(app: Flask) -> None:
+    """Give every request a correlation id you can trace across logs.
+
+    If the caller already sent an ``X-Request-ID`` we honour it (so a
+    front proxy or client can stitch a request together end-to-end);
+    otherwise we mint a fresh UUID4. The id is stashed on ``g`` for use
+    inside handlers and echoed back on the response header. This is the
+    kind of plumbing every real service ends up wanting on day two.
+    """
+
+    @app.before_request
+    def _assign_request_id():
+        incoming = request.headers.get(REQUEST_ID_HEADER, "").strip()
+        g.request_id = incoming or uuid.uuid4().hex
+
+    @app.after_request
+    def _emit_request_id(response):
+        # g.request_id may be missing for responses raised before the
+        # before_request hook ran (rare), so fall back defensively.
+        response.headers[REQUEST_ID_HEADER] = getattr(g, "request_id", "")
+        return response
 
 
 def register_routes(app: Flask) -> None:
@@ -51,6 +79,7 @@ def register_routes(app: Flask) -> None:
             {"method": "GET", "path": "/", "desc": "This landing page"},
             {"method": "GET", "path": "/api/health", "desc": "Liveness + uptime"},
             {"method": "GET", "path": "/api/time", "desc": "Current server time"},
+            {"method": "GET", "path": "/api/uuid", "desc": "Generate UUID4(s), ?count=1..100"},
             {"method": "POST", "path": "/api/echo", "desc": "Echo back your JSON"},
             {"method": "GET", "path": "/testing_api", "desc": "The original hello route"},
         ]
@@ -81,6 +110,25 @@ def register_routes(app: Flask) -> None:
             epoch=now.timestamp(),
             timezone="UTC",
         )
+
+    @app.route("/api/uuid")
+    def make_uuid():
+        """Generate one or more random UUID4s.
+
+        A handy stand-in for the id-generator endpoint most services need
+        eventually. Pass ``?count=N`` (1-100) to get a batch; anything
+        outside that range — or non-numeric — is rejected with a 400 so
+        callers get a clear signal instead of a silent surprise.
+        """
+        raw = request.args.get("count", "1")
+        try:
+            count = int(raw)
+        except ValueError:
+            return jsonify(error="count must be an integer"), 400
+        if not 1 <= count <= 100:
+            return jsonify(error="count must be between 1 and 100"), 400
+        ids = [str(uuid.uuid4()) for _ in range(count)]
+        return jsonify(uuids=ids, count=count, version=4)
 
     @app.route("/api/echo", methods=["POST"])
     def echo():
