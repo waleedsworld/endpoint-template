@@ -15,7 +15,9 @@ Every API project starts the same way: a blank file, a half-remembered `from fla
 - **A real landing page** at `/` that lists every route you expose — no more grepping your own code to remember the URL.
 - **`GET /api/health`** — liveness plus uptime and Python version, ready to point a load balancer or uptime monitor at.
 - **`GET /api/time`** — current server time in ISO and epoch. A clean example of shaping a JSON response.
+- **`GET /api/uuid`** — generate a UUID4, or a batch with `?count=1..100`. A ready-made id-generator with input validation to copy from.
 - **`POST /api/echo`** — reads a JSON body, validates it, echoes it back. Your copy-paste reference for handling input.
+- **`X-Request-ID` on every response** — the app assigns a correlation id to each request (honouring one the caller sends), so you can trace a request across your logs from day one.
 - **`GET /testing_api`** — the original `Hello, World!` route, kept around for old times' sake.
 - **JSON error handlers** so 404s and 405s come back as JSON, not HTML.
 - **An app factory** (`create_app`) so tests spin up isolated instances with zero global-state headaches.
@@ -61,6 +63,8 @@ Everything speaks JSON:
 ```bash
 curl http://127.0.0.1:5000/api/health
 
+curl http://127.0.0.1:5000/api/uuid?count=3
+
 curl -X POST http://127.0.0.1:5000/api/echo \
   -H "Content-Type: application/json" \
   -d '{"hello": "world"}'
@@ -85,7 +89,7 @@ pip install pytest
 pytest
 ```
 
-Seven tests cover the landing page, every endpoint, JSON validation, and the error handlers.
+The suite covers the landing page, every endpoint, UUID generation and its input validation, the request-id header, JSON validation, and the error handlers.
 
 ## Deploying
 
