@@ -66,6 +66,12 @@ curl -X POST http://127.0.0.1:5000/api/echo \
   -d '{"hello": "world"}'
 ```
 
+Here's what that looks like against the running server:
+
+<p align="center">
+  <img src="assets/api-demo.gif" alt="Curling the endpoint-template API from a terminal" width="640" />
+</p>
+
 ## Adding your own endpoint
 
 Open `app.py`, find `register_routes`, and add a function:
@@ -114,7 +120,8 @@ endpoint-template/
 │   └── style.css          # its styling
 ├── tests/
 │   └── test_app.py        # pytest suite
-└── docs/media/            # screenshots
+├── assets/                # demo GIF + poster of the API in action
+└── docs/media/            # landing-page screenshots
 ```
 
 ## License
